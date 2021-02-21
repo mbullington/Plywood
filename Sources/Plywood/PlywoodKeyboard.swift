@@ -22,7 +22,7 @@ class PlywoodKeyboard {
         let xkbContext = XKBContext()
         let xkbKeymap = XKBKeymap(context: xkbContext)
         keyboard.keymap = xkbKeymap
-        keyboard.repeatConfig = (rate: 25, delay: 600)
+        keyboard.repeatConfig = (rate: PlywoodSettings.keyboardRate, delay: PlywoodSettings.keyboardDelay)
 
         self.modifiersListener = keyboard.onModifiers.listen(onModifiers)
         self.keyListener = keyboard.onKey.listen(onKey)

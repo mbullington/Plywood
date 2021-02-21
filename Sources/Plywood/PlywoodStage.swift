@@ -1,10 +1,6 @@
 import SwiftWayland
 import SwiftWLR
 
-private let stagePadding = 56.0
-private let stageSpacing = 24.0
-private let crossAxisFactor = 0.9
-
 final class PlywoodStage {
     var toplevelViews: [[PlywoodView]] = []
     var focusedRowIndex: Int = 0
@@ -27,10 +23,10 @@ final class PlywoodStage {
         // Set size of view to "end" of queue.
         if views.isEmpty {
             // Set initial x to stage padding.
-            view.position = (x: stagePadding, y: 0)
+            view.position = (x: PlywoodSettings.stagePadding, y: 0)
         } else {
             let lastView: PlywoodView = views.last!
-            let offsetX: Double = lastView.position.x + Double(lastView.area.width) + stageSpacing
+            let offsetX: Double = lastView.position.x + Double(lastView.area.width) + PlywoodSettings.stageSpacing
 
             view.position = (x: offsetX, y: 0)
         }
@@ -54,14 +50,14 @@ final class PlywoodStage {
             if index != nil {
                 let view = views[index!]
 
-                var offsetX: Double = Double(view.area.width) + stageSpacing
+                var offsetX: Double = Double(view.area.width) + PlywoodSettings.stageSpacing
                 // Make sure the new "first" item is aligned correctly.
                 if index == 0 && views.count > 1 {
                     let secondView = views[1]
                     let secondViewNewX = secondView.position.x - offsetX
 
-                    if secondViewNewX < stagePadding {
-                        offsetX -= (stagePadding - secondViewNewX)
+                    if secondViewNewX < PlywoodSettings.stagePadding {
+                        offsetX -= (PlywoodSettings.stagePadding - secondViewNewX)
                     }
                 }
 
@@ -147,9 +143,9 @@ final class PlywoodStage {
             return
         }
 
-        let areaHeight = Int32(Double(height) * crossAxisFactor)
+        let areaHeight = Int32(Double(height) * PlywoodSettings.crossAxisFactor)
 
-        view.position = (x: view.position.x, y: Double(height) * (1 - crossAxisFactor) / 2)
+        view.position = (x: view.position.x, y: Double(height) * (1 - PlywoodSettings.crossAxisFactor) / 2)
         view.area = (width: view.area.width, height: areaHeight)
     }
 }
