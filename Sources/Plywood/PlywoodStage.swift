@@ -73,13 +73,35 @@ final class PlywoodStage {
                 for j in (index!)..<(views.count - 1) {
                     toplevelViews[i][j].position.x -= offsetX
                 }
+
                 break
             }
         }
     }
 
-    func focus(_ view: PlywoodView) {
+    func focusView(_ view: PlywoodView) {
+        // FIXME: This will probably break with multiple screens.
+        if state.outputs.isEmpty {
+            return
+        }
 
+        let offsetX = getFocusedOffset()
+
+        // If occluded (even partially) attempt to refocus.
+        if Int32(view.position.x) + view.area.width - offsetX > state.outputs[0].output.effectiveResolution.width {
+            columnIndexOffsets[focusedRowIndex] = toplevelViews[focusedRowIndex].firstIndex(where: { $0 === view }) ?? columnIndexOffsets[focusedRowIndex]
+        }
+    }
+
+    private func getFocusedOffset(_ index: Int? = nil) -> Int32 {
+        let focusedColumn = columnIndexOffsets[index ?? focusedRowIndex]
+        let lastView = focusedColumn == 0 ? nil : toplevelViews[index ?? focusedRowIndex][focusedColumn - 1]
+        
+        return lastView == nil ? 0 : Int32(lastView!.position.x + Double(lastView!.area.width) + PlywoodSettings.stageSpacing)
+    }
+
+    private func focus() {
+        toplevelViews[focusedRowIndex][columnIndexOffsets[focusedRowIndex]].focus()
     }
 
     func moveLeft() {
@@ -90,6 +112,8 @@ final class PlywoodStage {
         if columnIndexOffsets[focusedRowIndex] > 0 {
             columnIndexOffsets[focusedRowIndex] -= 1
         }
+
+        focus()
     }
 
     func moveRight() {
@@ -100,6 +124,8 @@ final class PlywoodStage {
         if columnIndexOffsets[focusedRowIndex] < toplevelViews[focusedRowIndex].count - 1 {
             columnIndexOffsets[focusedRowIndex] += 1
         }
+
+        focus()
     }
 
     func render(output: WLROutput, screenOffsetX: Int, resolution: Area) {
@@ -116,8 +142,7 @@ final class PlywoodStage {
 
         for view in toplevelViews[focusedRowIndex][focusedColumn...] {
             view.forEachSurface { surface, position in
-                let lastView = focusedColumn == 0 ? nil : self.toplevelViews[self.focusedRowIndex][focusedColumn - 1]
-                let offsetX = lastView == nil ? 0 : Int32(lastView!.position.x + Double(lastView!.area.width) + PlywoodSettings.stageSpacing)
+                let offsetX = self.getFocusedOffset()
 
                 // Quick return if occluded.
                 if position.x - offsetX > resolution.width {
@@ -138,8 +163,11 @@ final class PlywoodStage {
             return nil
         }
 
+        // Translate by offset.
+        let offsetX = getFocusedOffset()
+
         for view in toplevelViews[focusedRowIndex] {
-            if let result = view.findSurface(at: position) {
+            if let result = view.findSurface(at: position + (x: offsetX, y: 0)) {
                 return (
                     view: view,
                     surface: result.surface,

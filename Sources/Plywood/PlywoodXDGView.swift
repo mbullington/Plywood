@@ -126,7 +126,7 @@ class PlywoodXDGView: PlywoodView {
             previousXDGSurface.activated = false
         }
 
-        state.stage.focus(self)
+        state.stage.focusView(self)
         xdgSurface.activated = true
 
         seat.notifyKeyboardEnter(surface, keyboard: seat.keyboard)
