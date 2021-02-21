@@ -4,6 +4,7 @@ import SwiftWLR
 final class PlywoodStage {
     var toplevelViews: [[PlywoodView]] = []
     var focusedRowIndex: Int = 0
+    var columnIndexOffsets: [Int] = []
 
     private let state: PlywoodState
 
@@ -16,6 +17,7 @@ final class PlywoodStage {
     func insert(_ view: PlywoodView) {
         if toplevelViews.isEmpty {
             toplevelViews.append([])
+            columnIndexOffsets.append(0)
         }
 
         var views = toplevelViews[focusedRowIndex]
@@ -62,6 +64,10 @@ final class PlywoodStage {
                 }
 
                 toplevelViews[i].remove(at: index!)
+                // Make sure if we're focused on the last window it will go back.
+                if index! != 0 && columnIndexOffsets[i] >= views.count - 1 {
+                    columnIndexOffsets[i] -= 1
+                }
 
                 // Reflow all views after this index.
                 for j in (index!)..<(views.count - 1) {
@@ -76,8 +82,28 @@ final class PlywoodStage {
 
     }
 
+    func moveLeft() {
+        if columnIndexOffsets.isEmpty {
+            return
+        }
+
+        if columnIndexOffsets[focusedRowIndex] > 0 {
+            columnIndexOffsets[focusedRowIndex] -= 1
+        }
+    }
+
+    func moveRight() {
+        if columnIndexOffsets.isEmpty || toplevelViews.isEmpty {
+            return
+        }
+
+        if columnIndexOffsets[focusedRowIndex] < toplevelViews[focusedRowIndex].count - 1 {
+            columnIndexOffsets[focusedRowIndex] += 1
+        }
+    }
+
     func render(output: WLROutput, screenOffsetX: Int, resolution: Area) {
-        if toplevelViews.isEmpty {
+        if toplevelViews.isEmpty || toplevelViews[focusedRowIndex].isEmpty {
             return
         }
 
@@ -86,14 +112,19 @@ final class PlywoodStage {
             updateCrossAxis(height: resolution.height)
         }
 
-        for view in toplevelViews[focusedRowIndex] {
+        let focusedColumn = columnIndexOffsets[focusedRowIndex]
+
+        for view in toplevelViews[focusedRowIndex][focusedColumn...] {
             view.forEachSurface { surface, position in
+                let lastView = focusedColumn == 0 ? nil : self.toplevelViews[self.focusedRowIndex][focusedColumn - 1]
+                let offsetX = lastView == nil ? 0 : Int32(lastView!.position.x + Double(lastView!.area.width) + PlywoodSettings.stageSpacing)
+
                 // Quick return if occluded.
-                if position.x > resolution.width {
+                if position.x - offsetX > resolution.width {
                     return
                 }
 
-                view.render(surface: surface, output: output, position: position)
+                view.render(surface: surface, output: output, position: position - (x: offsetX, y: 0))
             }
         }
     }

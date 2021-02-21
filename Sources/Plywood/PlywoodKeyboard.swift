@@ -107,11 +107,13 @@ class PlywoodKeyboard {
     }
 
     func commandModifierLeft() {
-        print("left")
+        state.logger.info("Move stage left")
+        state.stage.moveLeft()
     }
 
     func commandModifierRight() {
-        print("right")
+        state.logger.info("Move stage right")
+        state.stage.moveRight()
     }
 
     func commandModifierUp() {
