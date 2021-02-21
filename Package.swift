@@ -4,14 +4,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "SwiftWLR",
+    name: "Plywood",
     products: [
         .library(name: "Cwlroots", targets: ["Cwlroots"]),
         .library(name: "SwiftWLR", targets: ["SwiftWLR"]),
-        .executable(name: "TinyWL", targets: ["TinyWL"]),
+        .executable(name: "Plywood", targets: ["Plywood"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/swiftwayland/SwiftWayland.git", .branch("master")),
+        .package(url: "https://github.com/bloomos/swift-wayland.git", .branch("master")),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
     ],
     targets: [
@@ -28,7 +28,7 @@ let package = Package(
             ]
         ),
         .target(
-            name: "TinyWL",
+            name: "Plywood",
             dependencies: ["Cwlroots", "SwiftWayland", "SwiftWLR", "Logging"]
         ),
     ]
