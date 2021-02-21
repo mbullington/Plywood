@@ -6,14 +6,14 @@ class PlywoodOutput {
     private let state: PlywoodState
 
     var frameListener: WLListener<WLROutput>!
-    var scaleListener: WLListener<WLROutput>!
+    var modeListener: WLListener<WLROutput>!
 
     init(_ output: WLROutput, state: PlywoodState) {
         self.output = output
         self.state = state
 
         self.frameListener = output.onFrame.listen(onFrame)
-        self.scaleListener = output.onScale.listen(onScale)
+        self.modeListener = output.onMode.listen(onMode)
     }
 
     func configure() {
@@ -45,7 +45,7 @@ class PlywoodOutput {
         output.commit()
     }
 
-    func onScale(_: WLROutput) {
+    func onMode(_: WLROutput) {
         state.stage.updateCrossAxis(height: output.effectiveResolution.height)
     }
 }

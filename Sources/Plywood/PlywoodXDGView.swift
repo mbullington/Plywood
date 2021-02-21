@@ -9,8 +9,9 @@ class PlywoodXDGView: PlywoodView {
         get { return xdgSurface.surface }
     }
 
-    var geometryBox: WLRBox {
-        get { return xdgSurface.geometryBox }
+    var area: Area {
+        get { return xdgSurface.geometryBox.area }
+        set(val) { xdgSurface.setSize(val) }
     }
 
     var mapListener: WLListener<WLRXDGSurface>!
@@ -21,6 +22,8 @@ class PlywoodXDGView: PlywoodView {
     var resizeRequestListener: WLListener<WLRXDGTopLevel.ResizeRequestEvent>?
 
     var position: Point
+    private var targetArea: Area?
+
     var isMapped: Bool = false
 
     init(_ xdgSurface: WLRXDGSurface, state: PlywoodState) {
@@ -127,9 +130,5 @@ class PlywoodXDGView: PlywoodView {
         xdgSurface.activated = true
 
         seat.notifyKeyboardEnter(surface, keyboard: seat.keyboard)
-    }
-
-    func setSize(_ area: Area) {
-        xdgSurface.setSize(area)
     }
 }

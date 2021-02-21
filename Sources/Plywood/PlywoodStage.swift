@@ -30,12 +30,14 @@ final class PlywoodStage {
             view.position = (x: stagePadding, y: 0)
         } else {
             let lastView: PlywoodView = views.last!
-            let offsetX: Double = lastView.position.x + Double(lastView.geometryBox.area.width) + stageSpacing
+            let offsetX: Double = lastView.position.x + Double(lastView.area.width) + stageSpacing
 
             view.position = (x: offsetX, y: 0)
         }
 
         views.append(view)
+        self.centerView(view, height: lastHeight)
+
         toplevelViews[focusedRowIndex] = views
         state.logger.info("Inserted window to stage")
     }
@@ -51,7 +53,17 @@ final class PlywoodStage {
 
             if index != nil {
                 let view = views[index!]
-                let offsetX = Double(view.geometryBox.area.width) + stageSpacing
+
+                var offsetX: Double = Double(view.area.width) + stageSpacing
+                // Make sure the new "first" item is aligned correctly.
+                if index == 0 && views.count > 1 {
+                    let secondView = views[1]
+                    let secondViewNewX = secondView.position.x - offsetX
+
+                    if secondViewNewX < stagePadding {
+                        offsetX -= (stagePadding - secondViewNewX)
+                    }
+                }
 
                 toplevelViews[i].remove(at: index!)
 
@@ -126,7 +138,18 @@ final class PlywoodStage {
         }
 
         for view in toplevelViews[focusedRowIndex] {
-            view.setSize((width: view.geometryBox.area.width, height: Int32(Double(height) * crossAxisFactor)))
+            self.centerView(view, height: height)
         }
+    }
+
+    private func centerView(_ view: PlywoodView, height: Int32) {
+        if height == 0 {
+            return
+        }
+
+        let areaHeight = Int32(Double(height) * crossAxisFactor)
+
+        view.position = (x: view.position.x, y: Double(height) * (1 - crossAxisFactor) / 2)
+        view.area = (width: view.area.width, height: areaHeight)
     }
 }

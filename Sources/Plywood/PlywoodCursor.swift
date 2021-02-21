@@ -54,9 +54,8 @@ class PlywoodCursor {
             return
         }
 
-        let geometryBox = view.geometryBox
-        let grabInitialPosition = cursor.position + geometryBox.position
-        mode = .resize(view, grabInitialPosition, geometryBox.area, edges)
+        let grabInitialPosition = cursor.position + view.position
+        mode = .resize(view, grabInitialPosition, view.area, edges)
     }
 
     func processViewMove(mode: PlywoodCursor.Mode, time: UInt32) {
@@ -101,7 +100,7 @@ class PlywoodCursor {
         }
 
         view.position = newPosition
-        view.setSize(newArea)
+        view.area = newArea
     }
 
     func processMotion(time: UInt32) {
