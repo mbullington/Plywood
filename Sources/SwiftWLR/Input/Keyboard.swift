@@ -85,6 +85,12 @@ public final class WLRKeyboard
         }
     }
 
+    public var state: XKBState {
+        get {
+            return XKBState(wlrKeyboard.pointee.xkb_state)
+        }
+    }
+
     public var repeatConfig: (rate: Int32, delay: Int32) {
         get {
             let repeatInfo = wlrKeyboard.pointee.repeat_info
