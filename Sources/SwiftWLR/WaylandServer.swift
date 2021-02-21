@@ -9,8 +9,6 @@ public class WaylandServer {
     public let backend: WLRBackend
     public let renderer: WLRRenderer
 
-    public let xdgShell: WLRXDGShell
-
     public let socket: String
 
     public var onNewOutput: WLSignal<WLROutput>
@@ -44,15 +42,11 @@ public class WaylandServer {
             fatalError("Failed to add socket to display")
         }
 
-        let xdgShell = WLRXDGShell(display: display)
-
         setenv("WAYLAND_DISPLAY", socket, 1)
 
         self.display = display
         self.backend = backend
         self.renderer = renderer
-
-        self.xdgShell = xdgShell
 
         self.socket = socket
 
