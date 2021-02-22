@@ -65,6 +65,7 @@ class PlywoodXDGView: PlywoodView {
         // }
 
         focus()
+        state.stage.focusView(self)
     }
 
     func onUnmap(_: WLRXDGSurface) {
