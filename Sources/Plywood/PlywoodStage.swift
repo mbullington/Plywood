@@ -143,6 +143,8 @@ final class PlywoodStage {
             removeColumnAnimation()
             columnIndexOffsets[focusedRowIndex].index -= amount
             runColumnAnimation(oldX: oldX)
+        } else {
+            runColumnAnimationElastic(magnitude: 1.0)
         }
         
         focusedView?.focus()
@@ -159,6 +161,8 @@ final class PlywoodStage {
             removeColumnAnimation()
             columnIndexOffsets[focusedRowIndex].index += amount
             runColumnAnimation(oldX: oldX)
+        } else {
+            runColumnAnimationElastic(magnitude: -1.0)
         }
 
         focusedView?.focus()
@@ -189,6 +193,35 @@ final class PlywoodStage {
         )
 
         columnAnimation = state.scheduler.run(action: action)
+    }
+
+    func runColumnAnimationElastic(magnitude: Double) {
+        // Since we've changed the index, focusedView will now be different.
+        let x = Double(columnIndexOffsets[focusedRowIndex].x)
+        let destX = self.focusedView!.position.x - PlywoodSettings.stagePadding
+
+        let action1 = InterpolationAction(
+            from: x,
+            to: destX + PlywoodSettings.stageSpacing * magnitude,
+            duration: 0.1,
+            easing: .sineInOut,
+            update: { val in 
+                self.columnIndexOffsets[self.focusedRowIndex].x = Int32(val)
+            }
+        )
+
+        let action2 = InterpolationAction(
+            from: destX + PlywoodSettings.stageSpacing * magnitude,
+            to: destX,
+            duration: 0.1,
+            easing: .sineInOut,
+            update: { val in 
+                self.columnIndexOffsets[self.focusedRowIndex].x = Int32(val)
+            }
+        )
+
+        let actionSequence = ActionSequence(actions: action1, action2)
+        columnAnimation = state.scheduler.run(action: actionSequence)
     }
 
     func render(output: WLROutput, screenOffsetX: Int, resolution: Area) {
