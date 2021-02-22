@@ -6,7 +6,7 @@ import TweenKit
 final class PlywoodStage {
     var toplevelViews: [[PlywoodView]] = []
     var focusedRowIndex: Int = 0
-    var columnIndexOffsets: [Int] = []
+    var columnIndexOffsets: [(index: Int, x: Int32)] = []
 
     private let state: PlywoodState
 
@@ -14,6 +14,17 @@ final class PlywoodStage {
 
     // Keep track of animations so we can remove them in-flight if needed to reflow.
     private var pointAnimation: Animation? = nil
+    private var columnAnimation: Animation? = nil
+
+    private var focusedView: PlywoodView? {
+        get {
+            if toplevelViews.isEmpty || columnIndexOffsets.isEmpty {
+                return nil
+            }
+
+            return toplevelViews[focusedRowIndex][columnIndexOffsets[focusedRowIndex].index]
+        }
+    }
 
     init(state: PlywoodState) {
         self.state = state
@@ -22,7 +33,7 @@ final class PlywoodStage {
     func insert(_ view: PlywoodView) {
         if toplevelViews.isEmpty {
             toplevelViews.append([])
-            columnIndexOffsets.append(0)
+            columnIndexOffsets.append((index: 0, x: 0))
         }
 
         var views = toplevelViews[focusedRowIndex]
@@ -72,8 +83,8 @@ final class PlywoodStage {
 
                 toplevelViews[i].remove(at: index!)
                 // Make sure if we're focused on the last window it will go back.
-                if index! != 0 && columnIndexOffsets[i] >= views.count - 1 {
-                    columnIndexOffsets[i] -= 1
+                if index! != 0 && columnIndexOffsets[i].index >= views.count - 1 {
+                    moveLeft()
                 }
 
                 // Reflow all views after this index (and add them to tween).
@@ -106,53 +117,72 @@ final class PlywoodStage {
             return
         }
 
-        let offsetX = getFocusedOffset()
+        let offsetX = columnIndexOffsets[focusedRowIndex].x
 
         // If occluded (even partially) attempt to refocus.
         if Int32(view.position.x) + view.area.width - offsetX > state.outputs[0].output.effectiveResolution.width {
-            columnIndexOffsets[focusedRowIndex] = toplevelViews[focusedRowIndex].firstIndex(where: { $0 === view }) ?? columnIndexOffsets[focusedRowIndex]
+            let newIdx = toplevelViews[focusedRowIndex].firstIndex(where: { $0 === view }) ?? columnIndexOffsets[focusedRowIndex].index
+            moveRight(amount: newIdx - columnIndexOffsets[focusedRowIndex].index)
         }
     }
 
-    private func getFocusedOffset(_ index: Int? = nil) -> Int32 {
-        let focusedColumn = columnIndexOffsets[index ?? focusedRowIndex]
-        let lastView = focusedColumn == 0 ? nil : toplevelViews[index ?? focusedRowIndex][focusedColumn - 1]
+    func moveLeft(amount: Int = 1) {
+        if columnIndexOffsets.isEmpty || toplevelViews.isEmpty || amount == 0 {
+            return
+        }
+
+        if columnIndexOffsets[focusedRowIndex].index > amount - 1 {
+            let oldX = Double(columnIndexOffsets[focusedRowIndex].x)
+
+            removeColumnAnimation()
+            columnIndexOffsets[focusedRowIndex].index -= amount
+            runColumnAnimation(oldX: oldX)
+        }
         
-        return lastView == nil ? 0 : Int32(lastView!.position.x + Double(lastView!.area.width) + PlywoodSettings.stageSpacing)
+        focusedView?.focus()
     }
 
-    private func focus() {
-        toplevelViews[focusedRowIndex][columnIndexOffsets[focusedRowIndex]].focus()
-    }
-
-    func moveLeft() {
-        if columnIndexOffsets.isEmpty {
+    func moveRight(amount: Int = 1) {
+        if columnIndexOffsets.isEmpty || toplevelViews.isEmpty || amount == 0 {
             return
         }
 
-        if columnIndexOffsets[focusedRowIndex] > 0 {
-            columnIndexOffsets[focusedRowIndex] -= 1
+        if columnIndexOffsets[focusedRowIndex].index < toplevelViews[focusedRowIndex].count - amount {
+            let oldX = Double(columnIndexOffsets[focusedRowIndex].x)
+
+            removeColumnAnimation()
+            columnIndexOffsets[focusedRowIndex].index += amount
+            runColumnAnimation(oldX: oldX)
         }
 
-        focus()
-    }
-
-    func moveRight() {
-        if columnIndexOffsets.isEmpty || toplevelViews.isEmpty {
-            return
-        }
-
-        if columnIndexOffsets[focusedRowIndex] < toplevelViews[focusedRowIndex].count - 1 {
-            columnIndexOffsets[focusedRowIndex] += 1
-        }
-
-        focus()
+        focusedView?.focus()
     }
 
     func removePointAnimation() {
         if pointAnimation == nil { return }
-
         state.scheduler.remove(animation: pointAnimation!)
+    }
+
+    func removeColumnAnimation() {
+        if columnAnimation == nil { return }
+        state.scheduler.remove(animation: columnAnimation!)
+    }
+
+    func runColumnAnimation(oldX: Double) {
+        // Since we've changed the index, focusedView will now be different.
+        let currentView = self.focusedView!
+
+        let action = InterpolationAction(
+            from: oldX,
+            to: currentView.position.x - PlywoodSettings.stagePadding,
+            duration: 0.3,
+            easing: .sineInOut,
+            update: { val in 
+                self.columnIndexOffsets[self.focusedRowIndex].x = Int32(val)
+            }
+        )
+
+        columnAnimation = state.scheduler.run(action: action)
     }
 
     func render(output: WLROutput, screenOffsetX: Int, resolution: Area) {
@@ -165,11 +195,9 @@ final class PlywoodStage {
             updateCrossAxis(height: resolution.height)
         }
 
-        let focusedColumn = columnIndexOffsets[focusedRowIndex]
-
-        for view in toplevelViews[focusedRowIndex][focusedColumn...] {
+        for view in toplevelViews[focusedRowIndex] {
             view.forEachSurface { surface, position in
-                let offsetX = self.getFocusedOffset()
+                let offsetX = self.columnIndexOffsets[self.focusedRowIndex].x
 
                 // Quick return if occluded.
                 if position.x - offsetX > resolution.width {
@@ -191,7 +219,7 @@ final class PlywoodStage {
         }
 
         // Translate by offset.
-        let offsetX = getFocusedOffset()
+        let offsetX = columnIndexOffsets[focusedRowIndex].x
 
         for view in toplevelViews[focusedRowIndex] {
             if let result = view.findSurface(at: position + (x: offsetX, y: 0)) {

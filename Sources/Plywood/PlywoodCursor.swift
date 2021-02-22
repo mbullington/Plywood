@@ -79,6 +79,7 @@ class PlywoodCursor {
         }
 
         result.view.focus()
+        state.stage.focusView(result.view)
     }
 
     func onAxis(event: WLRPointer.AxisEvent) {
