@@ -1,6 +1,8 @@
 import SwiftWayland
 import SwiftWLR
 
+import TweenKit
+
 final class PlywoodStage {
     var toplevelViews: [[PlywoodView]] = []
     var focusedRowIndex: Int = 0
@@ -9,6 +11,9 @@ final class PlywoodStage {
     private let state: PlywoodState
 
     private var lastHeight: Int32 = 0
+
+    // Keep track of animations so we can remove them in-flight if needed to reflow.
+    private var pointAnimation: Animation? = nil
 
     init(state: PlywoodState) {
         self.state = state
@@ -25,12 +30,12 @@ final class PlywoodStage {
         // Set size of view to "end" of queue.
         if views.isEmpty {
             // Set initial x to stage padding.
-            view.position = (x: PlywoodSettings.stagePadding, y: 0)
+            view.position = PointStruct(value: (x: PlywoodSettings.stagePadding, y: 0))
         } else {
             let lastView: PlywoodView = views.last!
             let offsetX: Double = lastView.position.x + Double(lastView.area.width) + PlywoodSettings.stageSpacing
 
-            view.position = (x: offsetX, y: 0)
+            view.position = PointStruct(value: (x: offsetX, y: 0))
         }
 
         views.append(view)
@@ -44,6 +49,8 @@ final class PlywoodStage {
         if toplevelViews.isEmpty {
             return
         }
+
+        removePointAnimation()
 
         for i in 0..<toplevelViews.count {
             let views = toplevelViews[i]
@@ -69,10 +76,24 @@ final class PlywoodStage {
                     columnIndexOffsets[i] -= 1
                 }
 
-                // Reflow all views after this index.
+                // Reflow all views after this index (and add them to tween).
+                var actions: [InterpolationAction<Double>] = []
                 for j in (index!)..<(views.count - 1) {
-                    toplevelViews[i][j].position.x -= offsetX
+                    let posX = toplevelViews[i][j].position.x
+
+                    actions.append(InterpolationAction(
+                        from: posX,
+                        to: posX - offsetX,
+                        duration: 0.5,
+                        easing: .sineInOut,
+                        update: { val in 
+                            self.toplevelViews[i][j].position.x = val
+                        }
+                    ))
                 }
+
+                let actionGroup = ActionGroup(actions: actions)
+                pointAnimation = state.scheduler.run(action: actionGroup)
 
                 break
             }
@@ -126,6 +147,12 @@ final class PlywoodStage {
         }
 
         focus()
+    }
+
+    func removePointAnimation() {
+        if pointAnimation == nil { return }
+
+        state.scheduler.remove(animation: pointAnimation!)
     }
 
     func render(output: WLROutput, screenOffsetX: Int, resolution: Area) {
@@ -204,7 +231,7 @@ final class PlywoodStage {
 
         let areaHeight = Int32(Double(height) * PlywoodSettings.crossAxisFactor)
 
-        view.position = (x: view.position.x, y: Double(height) * (1 - PlywoodSettings.crossAxisFactor) / 2)
+        view.position.y = Double(height) * (1 - PlywoodSettings.crossAxisFactor) / 2
         view.area = (width: view.area.width, height: areaHeight)
     }
 }

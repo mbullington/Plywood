@@ -27,6 +27,9 @@ class PlywoodOutput {
     }
 
     func onFrame(_: WLROutput) {
+        // Advance any animations.
+        state.schedulerNextTick()
+
         let renderer = state.server.renderer
 
         guard output.attachRender() else {

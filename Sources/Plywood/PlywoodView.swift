@@ -5,7 +5,7 @@ import SwiftWLR
  */
 protocol PlywoodView: AnyObject {
     var surface: WLRSurface { get }
-    var position: Point { get set }
+    var position: PointStruct { get set }
     var area: Area { get set }
 
     func forEachSurface(_ iterator: @escaping SurfaceIteratorCallback) -> Void

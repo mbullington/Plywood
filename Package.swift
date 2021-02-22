@@ -13,6 +13,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/bloomos/swift-wayland.git", .branch("master")),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
+        .package(url: "https://github.com/bloomos/TweenKit.git", .branch("master"))
     ],
     targets: [
         .systemLibrary(
@@ -29,7 +30,7 @@ let package = Package(
         ),
         .target(
             name: "Plywood",
-            dependencies: ["Cwlroots", "SwiftWayland", "SwiftWLR", "Logging"]
+            dependencies: ["Cwlroots", "SwiftWayland", "SwiftWLR", "Logging", "TweenKit"]
         ),
     ]
 )

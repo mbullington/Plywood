@@ -1,7 +1,12 @@
 import SwiftWayland
 import SwiftWLR
 
+import TweenKit
+
+import Foundation
 import Logging
+
+typealias Seconds = Double
 
 final class PlywoodState {
     let logger = Logger(label: "Plywood")
@@ -12,6 +17,8 @@ final class PlywoodState {
     let outputLayout: WLROutputLayout
 
     var stage: PlywoodStage!
+    let scheduler = ActionScheduler() 
+    private var schedulerLastTime: Seconds = -1
 
     let cursorManager: WLRXCursorManager
 
@@ -49,6 +56,26 @@ final class PlywoodState {
         self.newOutputListener = server.onNewOutput.listen(onNewOutput)
         self.newInputListener = server.onNewInput.listen(onNewInput)
         self.newXDGSurfaceListener = xdgShell.onNewXDGSurface.listen(onNewXDGSurface)
+    }
+
+    // Keep track of time for the scheduler so we can run this easily from each output
+    // on request frame.
+    func schedulerNextTick() {
+        if !scheduler.started {
+            schedulerLastTime = -1
+            return
+        }
+
+        let seconds = Date().timeIntervalSince1970
+
+        if schedulerLastTime == -1 {
+            schedulerLastTime = seconds
+            scheduler.step(dt: 0)
+            return
+        }
+
+        scheduler.step(dt: seconds - schedulerLastTime)
+        schedulerLastTime = seconds
     }
 
     func onNewOutput(inner: WLROutput) {

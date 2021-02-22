@@ -41,7 +41,7 @@ class PlywoodCursor {
             return
         }
 
-        let grabInitialPosition = cursor.position - view.position
+        let grabInitialPosition = cursor.position - view.position.value
         mode = .move(view, grabInitialPosition)
     }
 
@@ -54,7 +54,7 @@ class PlywoodCursor {
             return
         }
 
-        let grabInitialPosition = cursor.position + view.position
+        let grabInitialPosition = cursor.position + view.position.value
         mode = .resize(view, grabInitialPosition, view.area, edges)
     }
 

@@ -21,7 +21,7 @@ class PlywoodXDGView: PlywoodView {
     var moveRequestListener: WLListener<WLRXDGTopLevel.MoveRequestEvent>?
     var resizeRequestListener: WLListener<WLRXDGTopLevel.ResizeRequestEvent>?
 
-    var position: Point
+    var position: PointStruct
     private var targetArea: Area?
 
     var isMapped: Bool = false
@@ -30,7 +30,7 @@ class PlywoodXDGView: PlywoodView {
         self.xdgSurface = xdgSurface
         self.state = state
 
-        self.position = (x: 0, y: 0)
+        self.position = PointStruct(value: (x: 0, y: 0))
 
         self.mapListener = xdgSurface.onMap.listen(onMap)
         self.unmapListener = xdgSurface.onUnmap.listen(onUnmap)
@@ -74,7 +74,7 @@ class PlywoodXDGView: PlywoodView {
     func findSurface(
         at position: Point
     ) -> (surface: WLRSurface, coordinates: Point)? {
-        let viewPosition = position - self.position
+        let viewPosition = position - self.position.value
         // let surfaceState = surface.surface.current
 
         return xdgSurface.findSurface(at: viewPosition)
@@ -87,7 +87,7 @@ class PlywoodXDGView: PlywoodView {
 
         let outputCoordinates =
             state.outputLayout.outputCoordinates(of: output) +
-            self.position +
+            self.position.value +
             position
 
         let scaledOutputCoordinates = outputCoordinates * Double(output.scale)
