@@ -9,17 +9,19 @@ class PlywoodXDGView: PlywoodView {
         get { return xdgSurface.surface }
     }
 
+    // Use cached area to prevent un-needed reflows.
+    private var cachedArea: Area!
     var area: Area {
         get { return xdgSurface.geometryBox.area }
-        set(val) { xdgSurface.setSize(val) }
+        set(val) {
+            cachedArea = val
+            xdgSurface.setSize(val)
+        }
     }
 
     var mapListener: WLListener<WLRXDGSurface>!
     var unmapListener: WLListener<WLRXDGSurface>!
     var destroyListener: WLListener<WLRXDGSurface>!
-
-    var moveRequestListener: WLListener<WLRXDGTopLevel.MoveRequestEvent>?
-    var resizeRequestListener: WLListener<WLRXDGTopLevel.ResizeRequestEvent>?
 
     var position: PointStruct
     private var targetArea: Area?
@@ -31,19 +33,11 @@ class PlywoodXDGView: PlywoodView {
         self.state = state
 
         self.position = PointStruct(value: (x: 0, y: 0))
+        self.cachedArea = self.area
 
         self.mapListener = xdgSurface.onMap.listen(onMap)
         self.unmapListener = xdgSurface.onUnmap.listen(onUnmap)
         self.destroyListener = xdgSurface.onDestroy.listen(onDestroy)
-
-        guard case let .topLevel(topLevel) = xdgSurface.role else {
-            return
-        }
-
-        self.moveRequestListener =
-            topLevel.onMoveRequest.listen(onMoveRequest)
-        self.resizeRequestListener =
-            topLevel.onResizeRequest.listen(onResizeRequest)
     }
 
     public func forEachSurface(_ iterator: @escaping SurfaceIteratorCallback) {
@@ -52,6 +46,13 @@ class PlywoodXDGView: PlywoodView {
 
     func onMap(_: WLRXDGSurface) {
         isMapped = true
+
+        let area = self.area
+        if area != cachedArea {
+            cachedArea = area
+            state.stage.reflowView(self)
+        }
+
         focus()
     }
 
@@ -61,14 +62,6 @@ class PlywoodXDGView: PlywoodView {
 
     func onDestroy(_: WLRXDGSurface) {
         state.stage.remove(self)
-    }
-
-    func onMoveRequest(event: WLRXDGTopLevel.MoveRequestEvent) {
-        state.cursor.beginMove(view: self)
-    }
-
-    func onResizeRequest(event: WLRXDGTopLevel.ResizeRequestEvent) {
-        state.cursor.beginResize(view: self, edges: event.edges)
     }
 
     func findSurface(

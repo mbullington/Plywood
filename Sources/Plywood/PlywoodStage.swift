@@ -234,4 +234,52 @@ final class PlywoodStage {
         view.position.y = Double(height) * (1 - PlywoodSettings.crossAxisFactor) / 2
         view.area = (width: view.area.width, height: areaHeight)
     }
+
+    func reflowView(_ view: PlywoodView) {
+        // FIXME: This will probably break with multiple screens.
+        if state.outputs.isEmpty || toplevelViews.isEmpty {
+            return
+        }
+
+        // Center the view.
+        centerView(view, height: state.outputs[0].output.effectiveResolution.height)
+
+        let views = toplevelViews[focusedRowIndex]
+        let index = views.firstIndex(where: { $0 === view })
+
+        // No need to reflow if we're at the end.
+        if index == views.count - 1 {
+            return
+        }
+
+        // FIXME: Update this in the background.
+        if index == nil {
+            state.logger.warning("Request to reflow view that isn't part of the current row. Ignoring.")
+            return
+        }
+
+        removePointAnimation()
+
+        let nextX: Double = view.position.x + Double(view.area.width) + PlywoodSettings.stageSpacing
+        let offsetX: Double = views[index! + 1].position.x - nextX
+
+        // Reflow all views after this index (and add them to tween).
+        var actions: [InterpolationAction<Double>] = []
+        for j in (index! + 1)..<(views.count) {
+            let posX = toplevelViews[focusedRowIndex][j].position.x
+
+            actions.append(InterpolationAction(
+                from: posX,
+                to: posX - offsetX,
+                duration: 0.5,
+                easing: .sineInOut,
+                update: { val in 
+                    self.toplevelViews[self.focusedRowIndex][j].position.x = val
+                }
+            ))
+        }
+
+        let actionGroup = ActionGroup(actions: actions)
+        pointAnimation = state.scheduler.run(action: actionGroup)
+    }
 }

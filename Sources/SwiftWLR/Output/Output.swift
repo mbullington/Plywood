@@ -8,6 +8,7 @@ public final class WLROutput: RawPointerInitializable {
 
     public let onFrame: WLSignal<WLROutput>
     public let onMode: WLSignal<WLROutput>
+    public let onCommit: WLSignal<WLROutput>
 
     public var scale: Float {
         get {
@@ -40,6 +41,7 @@ public final class WLROutput: RawPointerInitializable {
 
         self.onFrame = WLSignal(&wlrOutput.pointee.events.frame)
         self.onMode = WLSignal(&wlrOutput.pointee.events.mode)
+        self.onCommit = WLSignal(&wlrOutput.pointee.events.commit)
     }
 
     public func setMode(_ mode: UnsafeMutablePointer<wlr_output_mode>) {
