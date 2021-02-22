@@ -276,8 +276,12 @@ final class PlywoodStage {
             return
         }
 
+        let resolution = state.outputs[0].output.effectiveResolution
+    
+        // Make sure the view's width is bounded.
+        view.area.width = min(view.area.width, (resolution.width - 2 * Int32(PlywoodSettings.stagePadding)))
         // Center the view.
-        centerView(view, height: state.outputs[0].output.effectiveResolution.height)
+        centerView(view, height: resolution.height)
 
         let views = toplevelViews[focusedRowIndex]
         let index = views.firstIndex(where: { $0 === view })
