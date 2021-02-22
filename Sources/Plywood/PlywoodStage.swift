@@ -206,7 +206,6 @@ final class PlywoodStage {
         return nil
     }
 
-    // FIXME: For now, this always assumes rows go horizontally.
     func updateCrossAxis(height: Int32) {
         // Quick return if our height hasn't changed but we were still (?) notified.
         if lastHeight == height {
@@ -214,13 +213,13 @@ final class PlywoodStage {
         }
         lastHeight = height
 
-        // FIXME: Do other rows? Lazy or all right now to be decided.
+        // FIXME: Do other rows? Decide if we should only do this row, or all rows.
         if toplevelViews.isEmpty {
             return
         }
 
         for view in toplevelViews[focusedRowIndex] {
-            self.centerView(view, height: height)
+            centerView(view, height: height)
         }
     }
 
@@ -230,8 +229,10 @@ final class PlywoodStage {
         }
 
         let areaHeight = Int32(Double(height) * PlywoodSettings.crossAxisFactor)
+        // Calculate this so we're actually centered.
+        let dy = Double((view.surfaceArea.height - view.area.height) / 2)
 
-        view.position.y = Double(height) * (1 - PlywoodSettings.crossAxisFactor) / 2
+        view.position.y = Double(height) * (1 - PlywoodSettings.crossAxisFactor) / 2 - dy
         view.area = (width: view.area.width, height: areaHeight)
     }
 

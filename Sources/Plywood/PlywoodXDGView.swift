@@ -19,6 +19,10 @@ class PlywoodXDGView: PlywoodView {
         }
     }
 
+    var surfaceArea: Area {
+        get { return xdgSurface.surface.current.area }
+    }
+
     var mapListener: WLListener<WLRXDGSurface>!
     var unmapListener: WLListener<WLRXDGSurface>!
     var destroyListener: WLListener<WLRXDGSurface>!
