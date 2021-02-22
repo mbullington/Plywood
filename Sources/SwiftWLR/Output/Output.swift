@@ -66,6 +66,10 @@ public final class WLROutput: RawPointerInitializable {
         wlr_output_render_software_cursors(wlrOutput, nil)
     }
 
+    public func setDamage(region: PixmanRegion32) {
+        wlr_output_set_damage(wlrOutput, region.region)
+    }
+
     public func commit() {
         wlr_output_commit(wlrOutput)
     }
