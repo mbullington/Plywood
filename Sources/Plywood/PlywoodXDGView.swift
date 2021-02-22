@@ -49,13 +49,20 @@ class PlywoodXDGView: PlywoodView {
     }
 
     func onMap(_: WLRXDGSurface) {
+        if !isMapped {
+            // Remove reference count from "unmapped" array.
+            state.unmappedXDGViews.removeAnyObject(self)
+            // Add to stage.
+            state.stage.insert(self)
+        }
+
         isMapped = true
 
-        let area = self.area
-        if area != cachedArea {
-            cachedArea = area
-            state.stage.reflowView(self)
-        }
+        // let area = self.area
+        // if area != cachedArea {
+        //     cachedArea = area
+        //     state.stage.reflowView(self)
+        // }
 
         focus()
     }

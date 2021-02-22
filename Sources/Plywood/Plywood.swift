@@ -17,11 +17,17 @@ final class PlywoodState {
     let outputLayout: WLROutputLayout
 
     var stage: PlywoodStage!
+    // XDG Views that do exist, but have not created a surface
+    // yet to map.
+    var unmappedXDGViews: [PlywoodXDGView] = []
+
     let scheduler = ActionScheduler() 
     private var schedulerLastTime: Seconds = -1
 
     let cursorManager: WLRXCursorManager
 
+    // TODO: Is multiseat used heavily in accessibility?
+    // Otherwise, don't see a huge compelling need to support it.
     var seat: PlywoodSeat!
     var cursor: PlywoodCursor!
     var keyboards: [PlywoodKeyboard]
@@ -108,7 +114,8 @@ final class PlywoodState {
         }
 
         let view = PlywoodXDGView(surface, state: self)
-        state.stage.insert(view)
+        // Removed when the map event is first fired.
+        unmappedXDGViews.append(view)
     }
 
     func onNewPointer(_ pointer: WLRInputDevice<WLRPointer>) {
