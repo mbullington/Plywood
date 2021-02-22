@@ -10,6 +10,12 @@ public final class WLROutput: RawPointerInitializable {
     public let onMode: WLSignal<WLROutput>
     public let onCommit: WLSignal<WLROutput>
 
+    public var name: String {
+        get {
+            return String(cString: &wlrOutput.pointee.name.0)
+        }
+    }
+
     public var scale: Float {
         get {
             return wlrOutput.pointee.scale

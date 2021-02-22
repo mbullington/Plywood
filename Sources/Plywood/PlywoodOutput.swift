@@ -6,14 +6,12 @@ class PlywoodOutput {
     private let state: PlywoodState
 
     var frameListener: WLListener<WLROutput>!
-    var modeListener: WLListener<WLROutput>!
 
     init(_ output: WLROutput, state: PlywoodState) {
         self.output = output
         self.state = state
 
         self.frameListener = output.onFrame.listen(onFrame)
-        self.modeListener = output.onMode.listen(onMode)
     }
 
     func configure() {
@@ -22,7 +20,9 @@ class PlywoodOutput {
         //     output.setMode(mode)
         // }
 
-        state.outputLayout.automaticallyAdd(output)
+        // Organizes from left to right, which for right now is pretty helpful
+        // since all windows will be one row in the stage.
+        state.outputLayout.insert(output)
         output.createGlobal()
     }
 
@@ -46,9 +46,5 @@ class PlywoodOutput {
 
         renderer.end()
         output.commit()
-    }
-
-    func onMode(_: WLROutput) {
-        state.stage.updateCrossAxis(height: output.effectiveResolution.height)
     }
 }

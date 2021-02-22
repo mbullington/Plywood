@@ -14,11 +14,12 @@ final class PlywoodState {
     let server: WaylandServer
 
     var outputs: [PlywoodOutput]
-    let outputLayout: WLROutputLayout
+    var outputLayout: PlywoodOutputLayout!
 
     var stage: PlywoodStage!
-    // XDG Views that do exist, but have not created a surface
-    // yet to map.
+    // XDG Views that do exist, but have not created a surface yet to map.
+    //
+    // Really just so ARC won't clean these classes up.
     var unmappedXDGViews: [PlywoodXDGView] = []
 
     let scheduler = ActionScheduler() 
@@ -45,13 +46,13 @@ final class PlywoodState {
         self.xdgShell = WLRXDGShell(display: server.display)
 
         self.outputs = []
-        self.outputLayout = WLROutputLayout()
 
         self.cursorManager = WLRXCursorManager(name: nil, size: 24)
         self.cursorManager.load(scale: 1)
 
         self.keyboards = []
 
+        self.outputLayout = PlywoodOutputLayout(state: self)
         self.stage = PlywoodStage(state: self)
 
         self.seat = PlywoodSeat(

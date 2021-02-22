@@ -26,6 +26,12 @@ final class PlywoodStage {
         }
     }
 
+    private var combinedResolution: Area {
+        get {
+            return state.outputLayout.combinedResolution
+        }
+    }
+
     init(state: PlywoodState) {
         self.state = state
     }
@@ -112,11 +118,6 @@ final class PlywoodStage {
     }
 
     func focusView(_ view: PlywoodView) {
-        // FIXME: Calculating resolution like this will probably break with multiple screens.
-        if state.outputs.isEmpty {
-            return
-        }
-
         let offsetX = columnIndexOffsets[focusedRowIndex].x
         let newIdx = toplevelViews[focusedRowIndex].firstIndex(where: { $0 === view }) ?? columnIndexOffsets[focusedRowIndex].index
 
@@ -126,7 +127,7 @@ final class PlywoodStage {
             return
         }
 
-        if Int32(view.position.x) + view.area.width - offsetX > state.outputs[0].output.effectiveResolution.width {
+        if Int32(view.position.x) + view.area.width - offsetX > combinedResolution.width {
             moveRight(amount: newIdx - columnIndexOffsets[focusedRowIndex].index)
             return
         }
@@ -229,11 +230,6 @@ final class PlywoodStage {
             return
         }
 
-        // Cover edge case to make sure we always have a height.
-        if lastHeight == 0 {
-            updateCrossAxis(height: resolution.height)
-        }
-
         for view in toplevelViews[focusedRowIndex] {
             view.forEachSurface { surface, position in
                 let offsetX = self.columnIndexOffsets[self.focusedRowIndex].x
@@ -273,7 +269,9 @@ final class PlywoodStage {
         return nil
     }
 
-    func updateCrossAxis(height: Int32) {
+    func updateOutputMode() {
+        let height: Int32 = combinedResolution.height
+
         // Quick return if our height hasn't changed but we were still (?) notified.
         if lastHeight == height {
             return
@@ -305,16 +303,14 @@ final class PlywoodStage {
 
     func reflowView(_ view: PlywoodView) {
         // FIXME: This will probably break with multiple screens.
-        if state.outputs.isEmpty || toplevelViews.isEmpty {
+        if toplevelViews.isEmpty {
             return
         }
-
-        let resolution = state.outputs[0].output.effectiveResolution
     
         // Make sure the view's width is bounded.
-        view.area.width = min(view.area.width, (resolution.width - 2 * Int32(PlywoodSettings.stagePadding)))
+        view.area.width = min(view.area.width, (combinedResolution.width - 2 * Int32(PlywoodSettings.stagePadding)))
         // Center the view.
-        centerView(view, height: resolution.height)
+        centerView(view, height: combinedResolution.height)
 
         let views = toplevelViews[focusedRowIndex]
         let index = views.firstIndex(where: { $0 === view })

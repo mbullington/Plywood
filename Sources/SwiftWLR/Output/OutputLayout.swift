@@ -1,6 +1,6 @@
 import Cwlroots
 
-public class WLROutputLayout {
+open class WLROutputLayout {
     let wlrOutputLayout: UnsafeMutablePointer<wlr_output_layout>
 
     public init() {
