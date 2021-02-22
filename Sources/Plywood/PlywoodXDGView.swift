@@ -27,6 +27,8 @@ class PlywoodXDGView: PlywoodView {
     var unmapListener: WLListener<WLRXDGSurface>!
     var destroyListener: WLListener<WLRXDGSurface>!
 
+    var commitListener: WLListener<WLRSurface>!
+
     var position: PointStruct
     private var targetArea: Area?
 
@@ -58,11 +60,7 @@ class PlywoodXDGView: PlywoodView {
 
         isMapped = true
 
-        // let area = self.area
-        // if area != cachedArea {
-        //     cachedArea = area
-        //     state.stage.reflowView(self)
-        // }
+        self.commitListener = xdgSurface.surface.onCommit.listen(onCommit)
 
         focus()
         state.stage.focusView(self)
@@ -74,6 +72,15 @@ class PlywoodXDGView: PlywoodView {
 
     func onDestroy(_: WLRXDGSurface) {
         state.stage.remove(self)
+    }
+
+    func onCommit(_: WLRSurface) {
+        let area = self.area
+        // If we have unexpected change in size, make sure to reflow.
+        if area != cachedArea {
+            cachedArea = area
+            state.stage.reflowView(self)
+        }
     }
 
     func findSurface(
