@@ -82,7 +82,7 @@ final class PlywoodStage {
             if index != nil {
                 let view = views[index!]
 
-                var offsetX: Double = Double(view.area.width) + PlywoodSettings.stageSpacing
+                var offsetX: Double = Double(view.area.width) - PlywoodSettings.stageSpacing
                 // Make sure the new "first" item is aligned correctly.
                 if index == 0 && views.count > 1 {
                     let secondView = views[1]
