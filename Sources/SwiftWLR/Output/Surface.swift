@@ -1,3 +1,4 @@
+import SwiftWayland
 import Cwlroots
 
 import Glibc
@@ -6,8 +7,10 @@ import Glibc
 // The fact that checking if two WLRSurfaces are the same is a necessary
 // operation is a good cause to make all of the "pointer wrappers" derive from
 // a common type with built-in conformances.
-public class WLRSurface: Equatable {
+public class WLRSurface: Equatable, RawPointerInitializable {
     let wlrSurface: UnsafeMutablePointer<wlr_surface>
+
+    public let onCommit: WLSignal<WLRSurface>
 
     public var current: WLRSurfaceState {
         get {
@@ -19,8 +22,10 @@ public class WLRSurface: Equatable {
         return left.wlrSurface == right.wlrSurface
     }
 
-    public init(_ pointer: UnsafeMutablePointer<wlr_surface>) {
-        self.wlrSurface = pointer
+    required public init(_ pointer: UnsafeMutableRawPointer) {
+        self.wlrSurface = pointer.assumingMemoryBound(to: wlr_surface.self)
+
+        self.onCommit = WLSignal<WLRSurface>(&wlrSurface.pointee.events.commit)
     }
 
     public func fetchTexture() -> WLRTexture? {
