@@ -112,17 +112,23 @@ final class PlywoodStage {
     }
 
     func focusView(_ view: PlywoodView) {
-        // FIXME: This will probably break with multiple screens.
+        // FIXME: Calculating resolution like this will probably break with multiple screens.
         if state.outputs.isEmpty {
             return
         }
 
         let offsetX = columnIndexOffsets[focusedRowIndex].x
+        let newIdx = toplevelViews[focusedRowIndex].firstIndex(where: { $0 === view }) ?? columnIndexOffsets[focusedRowIndex].index
 
         // If occluded (even partially) attempt to refocus.
+        if view.position.x - Double(offsetX) < PlywoodSettings.stagePadding {
+            moveLeft(amount: columnIndexOffsets[focusedRowIndex].index - newIdx)
+            return
+        }
+
         if Int32(view.position.x) + view.area.width - offsetX > state.outputs[0].output.effectiveResolution.width {
-            let newIdx = toplevelViews[focusedRowIndex].firstIndex(where: { $0 === view }) ?? columnIndexOffsets[focusedRowIndex].index
             moveRight(amount: newIdx - columnIndexOffsets[focusedRowIndex].index)
+            return
         }
     }
 
