@@ -42,23 +42,29 @@ final class PlywoodStage {
             columnIndexOffsets.append((index: 0, x: 0))
         }
 
-        var views = toplevelViews[focusedRowIndex]
+        let views = toplevelViews[focusedRowIndex]
 
         // Set size of view to "end" of queue.
         if views.isEmpty {
             // Set initial x to stage padding.
             view.position = PointStruct(value: (x: PlywoodSettings.stagePadding, y: 0))
+
+            toplevelViews[focusedRowIndex].append(view)
         } else {
-            let lastView: PlywoodView = views.last!
+            let index = columnIndexOffsets[focusedRowIndex].index + 1
+            let lastView: PlywoodView = views[index - 1]
             let offsetX: Double = lastView.position.x + Double(lastView.area.width) + PlywoodSettings.stageSpacing
 
             view.position = PointStruct(value: (x: offsetX, y: 0))
+
+            if index == views.count {
+                toplevelViews[focusedRowIndex].append(view)
+            } else {
+                toplevelViews[focusedRowIndex].insert(view, at: index)
+            }
         }
 
-        views.append(view)
-        self.centerView(view, height: lastHeight)
-
-        toplevelViews[focusedRowIndex] = views
+        reflowView(view)
         state.logger.info("Inserted window to stage")
     }
 
