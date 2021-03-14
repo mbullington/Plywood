@@ -1,6 +1,10 @@
 import SwiftWayland
 import SwiftWLR
 
+import class SkiaKit.Canvas
+import class SkiaKit.Image
+import struct SkiaKit.Rect
+
 class PlywoodXDGView: PlywoodView {
     let xdgSurface: WLRXDGSurface
     private let state: PlywoodState
@@ -60,7 +64,7 @@ class PlywoodXDGView: PlywoodView {
 
         isMapped = true
 
-        self.commitListener = xdgSurface.surface.onCommit.listen(onCommit)
+        // self.commitListener = xdgSurface.surface.onCommit.listen(onCommit)
 
         focus()
         state.stage.focusView(self)
@@ -75,12 +79,12 @@ class PlywoodXDGView: PlywoodView {
     }
 
     func onCommit(_: WLRSurface) {
-        let area = self.area
-        // If we have unexpected change in size, make sure to reflow.
-        if area != cachedArea {
-            cachedArea = area
-            state.stage.reflowView(self)
-        }
+        // let area = self.area
+        // // If we have unexpected change in size, make sure to reflow.
+        // if area != cachedArea {
+        //     cachedArea = area
+        //     state.stage.reflowView(self)
+        // }
     }
 
     func findSurface(
@@ -92,35 +96,27 @@ class PlywoodXDGView: PlywoodView {
         return xdgSurface.findSurface(at: viewPosition)
     }
 
-    func render(surface: WLRSurface, output: WLROutput, position: Position) {
+    func render(surface: WLRSurface, canvas: Canvas, position: Position) {
         guard let texture = surface.fetchTexture() else {
             return
         }
 
-        let outputCoordinates =
-            state.outputLayout.outputCoordinates(of: output) +
-            self.position.value +
-            position
+        guard let image: Image = texture.toImage(state.grContext) else {
+            return
+        }
 
-        let scaledOutputCoordinates = outputCoordinates * Double(output.scale)
-        let scaledOutputArea = surface.current.area * Double(output.scale)
+        let coords = self.position.value + position
+        let area = surface.current.area 
 
-        let box = WLRBox(
-            position: Position(
-                x: Int32(scaledOutputCoordinates.x),
-                y: Int32(scaledOutputCoordinates.y)
-            ),
-            area: scaledOutputArea
+        canvas.drawImage(
+            image,
+            SkiaKit.Rect(
+                x: Float(coords.x),
+                y: Float(coords.y),
+                width: Float(area.width),
+                height: Float(area.height)
+            )
         )
-
-        let matrix = box.project(
-            transform: surface.current.transform,
-            rotation: 0,
-            projection: output.transformMatrix
-        )
-
-        let renderer = state.server.renderer
-        renderer.render(texture: texture, with: matrix, alpha: 1)
 
         surface.sendFrameDone()
     }

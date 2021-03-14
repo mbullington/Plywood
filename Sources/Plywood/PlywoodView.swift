@@ -1,5 +1,7 @@
 import SwiftWLR
 
+import class SkiaKit.Canvas
+
 /**
  * View abstraction we can use for XDG, XWayland, etc...
  */
@@ -13,7 +15,7 @@ protocol PlywoodView: AnyObject {
     func forEachSurface(_ iterator: @escaping SurfaceIteratorCallback) -> Void
     func findSurface(at position: Point) -> (surface: WLRSurface, coordinates: Point)?
 
-    func render(surface: WLRSurface, output: WLROutput, position: Position) -> Void
+    func render(surface: WLRSurface, canvas: Canvas, position: Position) -> Void
 
     func focus() -> Void
 }

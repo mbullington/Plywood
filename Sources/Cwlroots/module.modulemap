@@ -1,4 +1,5 @@
 module Cwlroots {
   umbrella header "shim.h"
   link "xkbcommon"
+  export *
 }

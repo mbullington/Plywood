@@ -1,5 +1,6 @@
 import SwiftWayland
 import SwiftWLR
+import class SkiaKit.GRContext
 
 import TweenKit
 
@@ -7,6 +8,10 @@ import Foundation
 import Logging
 
 typealias Seconds = Double
+
+enum PlywoodError: Error {
+    case skiaFailed
+}
 
 final class PlywoodState {
     let logger = Logger(label: "Plywood")
@@ -37,9 +42,16 @@ final class PlywoodState {
     var newInputListener: WLListener<SomeWLRInputDevice>!
     var newXDGSurfaceListener: WLListener<WLRXDGSurface>!
 
+    // Used for Skia.
+    var grContext: GRContext {
+        get {
+            return self.server.grContext!
+        }
+    }
+
     let xdgShell: WLRXDGShell
 
-    init(for server: WaylandServer) {
+    init(for server: WaylandServer) throws {
         self.server = server
 
         // Setup protocol implementations.
@@ -51,6 +63,10 @@ final class PlywoodState {
         self.cursorManager.load(scale: 1)
 
         self.keyboards = []
+
+        guard server.grContext != nil else {
+            throw PlywoodError.skiaFailed
+        }
 
         self.outputLayout = PlywoodOutputLayout(state: self)
         self.stage = PlywoodStage(state: self)

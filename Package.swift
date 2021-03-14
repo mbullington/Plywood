@@ -13,7 +13,8 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/bloomos/swift-wayland.git", .branch("master")),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
-        .package(url: "https://github.com/bloomos/TweenKit.git", .branch("master"))
+        .package(url: "https://github.com/bloomos/TweenKit.git", .branch("master")),
+        .package(url: "https://github.com/bloomos/SkiaKit.git", .branch("bloom-hotfixes"))
     ],
     targets: [
         .systemLibrary(
@@ -29,8 +30,30 @@ let package = Package(
             ]
         ),
         .target(
+            name: "Cplywood",
+            cSettings: [
+            .headerSearchPath("include"),
+            ]
+        ),
+        .target(
             name: "Plywood",
-            dependencies: ["Cwlroots", "SwiftWayland", "SwiftWLR", "Logging", "TweenKit"]
+            dependencies: [
+                "Cwlroots",
+                "Cplywood",
+                "SwiftWayland",
+                "SwiftWLR",
+                "Logging",
+                "TweenKit",
+                "SkiaKit"
+            ],
+            cSettings: [
+                .define("WLR_USE_UNSTABLE"),
+            ],
+            // Needed since we have code implementation in the .h files (Cplywood).
+            // This /works/, but the IR doesn't detect it.
+            swiftSettings: [
+                .unsafeFlags(["-Xfrontend", "-validate-tbd-against-ir=none"]),
+            ]
         ),
     ]
 )

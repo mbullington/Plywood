@@ -10,6 +10,12 @@ public class WLRRenderer {
         self.wlrRenderer = pointer
     }
 
+    public var egl: WLREGL {
+        get {
+            return WLREGL(wlr_gles2_renderer_get_egl(wlrRenderer))
+        }
+    }
+
     public func initialize(display: WLDisplay) {
         wlr_renderer_init_wl_display(wlrRenderer, display.pointer)
     }

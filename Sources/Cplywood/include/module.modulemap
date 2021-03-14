@@ -1,0 +1,8 @@
+
+module Cplywood [system] {
+	umbrella header "umbrella.h"
+    link "EGL"
+	link "GLESv2"
+	link "SkiaSharp"
+	export *
+}

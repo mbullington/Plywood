@@ -1,6 +1,9 @@
 import SwiftWayland
 import SwiftWLR
 
+import class SkiaKit.Surface
+import class SkiaKit.Canvas
+
 import TweenKit
 
 final class PlywoodStage {
@@ -231,10 +234,15 @@ final class PlywoodStage {
         columnAnimation = state.scheduler.run(action: actionSequence)
     }
 
-    func render(output: WLROutput, screenOffsetX: Int, resolution: Area) {
+    func render(output: WLROutput, canvas: Canvas, screenOffsetX: Int, resolution: Area) {
         if toplevelViews.isEmpty || toplevelViews[focusedRowIndex].isEmpty {
             return
         }
+
+        let coords = state.outputLayout.outputCoordinates(of: output)
+        canvas.save()
+        canvas.scale(output.scale)
+        canvas.translate(dx: Float(coords.x), dy: Float(coords.y))
 
         for view in toplevelViews[focusedRowIndex] {
             view.forEachSurface { surface, position in
@@ -245,9 +253,11 @@ final class PlywoodStage {
                     return
                 }
 
-                view.render(surface: surface, output: output, position: position - (x: offsetX, y: 0))
+                view.render(surface: surface, canvas: canvas, position: position - (x: offsetX, y: 0))
             }
         }
+
+        canvas.restore()
     }
 
     func findView(at position: Point) -> (

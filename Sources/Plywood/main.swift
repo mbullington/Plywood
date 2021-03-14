@@ -5,13 +5,18 @@ import Logging
 LoggingSystem.bootstrap(WLRLogHandler.init)
 
 let server = WaylandServer()
-let state = PlywoodState(for: server)
 
-state.logger.info("Running Wayland compositor on WAYLAND_DISPLAY=\(server.socket)")
+do {
+    let state = try PlywoodState(for: server)
 
-// let _ = try! Process.run(
-//     URL(fileURLWithPath: "/bin/sh", isDirectory: false),
-//     arguments: ["-c", "alacritty"]
-// )
+    state.logger.info("Running Wayland compositor on WAYLAND_DISPLAY=\(server.socket)")
 
-server.run()
+    // let _ = try! Process.run(
+    //     URL(fileURLWithPath: "/bin/sh", isDirectory: false),
+    //     arguments: ["-c", "alacritty"]
+    // )
+
+    server.run()
+} catch PlywoodError.skiaFailed {
+    print("Skia initialization failed!")
+}
